@@ -26,7 +26,6 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <vector>
 
 #include "mysql_connection.h"
 
