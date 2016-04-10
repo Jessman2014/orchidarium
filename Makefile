@@ -38,7 +38,7 @@ LDLIBS    = -lwiringPi -lwiringPiDev -lpthread -lm
 # Should not alter anything below this line
 ###############################################################################
 
-SRC     =       Sensor.cpp                                      \
+SRC     =       Sensor.cpp \
 
 OBJ     =       $(SRC:.c=.o)
 

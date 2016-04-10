@@ -52,7 +52,7 @@
 
 using namespace std;
 
-int insertTempHum(float temp, float hum)
+int insertTempHum(float temp, float hum);
 
 int main(void)
 {
@@ -60,17 +60,18 @@ int main(void)
 	int newTemp, newRh;
 	float tempF, rhF;
 
-
+	cout << "got to initialization" << endl;
 	temp = rh = newTemp = newRh = tempF = 0;
 
 	wiringPiSetup();
 	piHiPri(55);
-
+	cout << "sleeping" << endl;
 	//for (;;)
 	//{
 	delay(1000);
 
 	if (readRHT03(RHT03_PIN, &newTemp, &newRh)) {
+		cout << "successful read " << newTemp << " " << newRh << endl;
 		if ((temp != newTemp) || (rh != newRh))
 		{
 			temp = newTemp;
@@ -81,7 +82,7 @@ int main(void)
 				temp = -temp;
 			}
 			//valid temp and humidity
-			if (temp < 45 && rh < 110 && temp > 5 && rh > 0) {
+			if (temp < 450 && rh < 1100 && temp > 50 && rh > 0) {
 				tempF = (float)(newTemp * 1.8 + 320) / 10.0;
 				rhF = (float)rh / 10.0;
 				insertTempHum(tempF, rhF);
@@ -97,6 +98,7 @@ int main(void)
 }
 
 int insertTempHum(float temp, float hum) {
+	cout << "got to insert " << temp << " " << hum << endl;
 	try {
 		sql::Driver * driver = get_driver_instance();
 
@@ -107,8 +109,11 @@ int insertTempHum(float temp, float hum) {
 
 		//first temp then hum
 		pstmt.reset(con->prepareStatement("CALL insertTempHumidity(?,?)"));
-		pstmt->setString(1, temp);
-		pstmt->setString(2, hum);
+		std::ostringstream ss;
+		ss << temp;
+		pstmt->setString(1, ss.str());
+		ss << hum;
+		pstmt->setString(2, ss.str());
 
 		pstmt->execute();
 	}
@@ -126,5 +131,7 @@ int insertTempHum(float temp, float hum) {
 		cout << "# ERR: " << e.what();
 		cout << " (MySQL error code: " << e.getErrorCode();
 		cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+		return EXIT_FAILURE;
 	}
+	return EXIT_SUCCESS;
 }
