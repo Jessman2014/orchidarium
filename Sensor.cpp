@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <csignal>
 
 #include "mysql_connection.h"
 
