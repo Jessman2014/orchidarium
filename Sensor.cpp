@@ -52,51 +52,6 @@
 
 using namespace std;
 
-int insertTempHum(float temp, float hum);
-
-int main(void)
-{
-	int temp, rh;
-	int newTemp, newRh;
-	float tempF, rhF;
-
-	cout << "got to initialization" << endl;
-	temp = rh = newTemp = newRh = tempF = 0;
-
-	wiringPiSetup();
-	piHiPri(55);
-	cout << "sleeping" << endl;
-	//for (;;)
-	//{
-	delay(1000);
-
-	if (readRHT03(RHT03_PIN, &newTemp, &newRh)) {
-		cout << "successful read " << newTemp << " " << newRh << endl;
-		if ((temp != newTemp) || (rh != newRh))
-		{
-			temp = newTemp;
-			rh = newRh;
-			if ((temp & 0x8000) != 0) // Negative
-			{
-				temp &= 0x7FFF;
-				temp = -temp;
-			}
-			//valid temp and humidity
-			if (temp < 450 && rh < 1100 && temp > 50 && rh > 0) {
-				tempF = (float)(newTemp * 1.8 + 320) / 10.0;
-				rhF = (float)rh / 10.0;
-				insertTempHum(tempF, rhF);
-			}
-		}
-	}
-	//}
-
-
-
-
-	return 0;
-}
-
 int insertTempHum(float temp, float hum) {
 	cout << "got to insert " << temp << " " << hum << endl;
 	try {
@@ -135,3 +90,61 @@ int insertTempHum(float temp, float hum) {
 	}
 	return EXIT_SUCCESS;
 }
+
+void signalHandler(int signum) {
+	cout << "Interrupt signal (" << signum << ") received.\n";
+
+	// cleanup and close up stuff here  
+	// terminate program  
+
+	exit(signum);
+}
+
+int main(void)
+{
+	int temp, rh;
+	int newTemp, newRh;
+	float tempF, rhF;
+
+	cout << "got to initialization" << endl;
+	temp = rh = newTemp = newRh = tempF = 0;
+
+	wiringPiSetup();
+	piHiPri(55);
+
+	// register signal SIGINT and signal handler  
+	signal(SIGINT, signalHandler);
+
+	while(1)
+	{
+		cout << "sleeping" << endl;
+		delay(1000);
+
+		if (readRHT03(RHT03_PIN, &newTemp, &newRh)) {
+			cout << "successful read " << newTemp << " " << newRh << endl;
+			if ((temp != newTemp) || (rh != newRh))
+			{
+				temp = newTemp;
+				rh = newRh;
+				if ((temp & 0x8000) != 0) // Negative
+				{
+					temp &= 0x7FFF;
+					temp = -temp;
+				}
+				//valid temp and humidity
+				if (temp < 450 && rh < 1100 && temp > 50 && rh > 0) {
+					tempF = (float)(newTemp * 1.8 + 320) / 10.0;
+					rhF = (float)rh / 10.0;
+					insertTempHum(tempF, rhF);
+				}
+			}
+		}
+	}
+
+
+
+
+	return 0;
+}
+
+
